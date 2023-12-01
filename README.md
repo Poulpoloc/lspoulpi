@@ -1,14 +1,4 @@
-# Template for VS Code python tools extensions
-
-This is a template repository to get you started on building a VS Code extension for your favorite python tool. It could be a linter, formatter, or code analysis, or all of those together. This template will give you the basic building blocks you need to build a VS Code extension for it.
-
-## Programming Languages and Frameworks
-
-The extension template has two parts, the extension part and language server part. The extension part is written in TypeScript, and language server part is written in Python over the [_pygls_][pygls] (Python language server) library.
-
-For the most part you will be working on the python part of the code when using this template. You will be integrating your tool with the extension part using the [Language Server Protocol](https://microsoft.github.io/language-server-protocol). [_pygls_][pygls] currently works on the [version 3.16 of LSP](https://microsoft.github.io/language-server-protocol/specifications/specification-3-16/).
-
-The TypeScript part handles working with VS Code and its UI. The extension template comes with few settings pre configured that can be used by your tool. If you need to add new settings to support your tool, you will have to work with a bit of TypeScript. The extension has examples for few settings that you can follow. You can also look at extensions developed by our team for some of the popular tools as reference.
+# LSPoulpi
 
 ## Requirements
 
@@ -18,20 +8,13 @@ The TypeScript part handles working with VS Code and its UI. The extension templ
 1. npm >= 8.3.0 (`npm` is installed with node, check npm version, use `npm install -g npm@8.3.0` to update)
 1. Python extension for VS Code
 
-You should know to create and work with python virtual environments.
+## Dev Setup
 
-## Getting Started
-
-1. Use this [template to create your repo](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template).
-1. Check-out your repo locally on your development machine.
 1. Create and activate a python virtual environment for this project in a terminal. Be sure to use the minimum version of python for your tool. This template was written to work with python 3.7 or greater.
 1. Install `nox` in the activated environment: `python -m pip install nox`.
 1. Add your favorite tool to `requirements.in`
 1. Run `nox --session setup`.
 1. **Optional** Install test dependencies `python -m pip install -r src/test/python_tests/requirements.txt`. You will have to install these to run tests from the Test Explorer.
-1. Open `package.json`, look for and update the following things:
-    1. Find and replace `<pytool-module>` with module name for your tool. This will be used internally to create settings namespace, register commands, etc. Recommendation is to use lower case version of the name, no spaces, `-` are ok. For example, replacing `<pytool-module>` with `pylint` will lead to settings looking like `pylint.args`. Another example, replacing `<pytool-module>` with `black-formatter` will make settings look like `black-formatter.args`.
-    1. Find and replace `<pytool-display-name>` with display name for your tool. This is used as the title for the extension in market place, extensions view, output logs, etc. For example, for the `black` extension this is `Black Formatter`.
 1. Install node packages using `npm install`.
 1. Go to https://marketplace.visualstudio.com/vscode and create a publisher account if you don't already have one.
     1. Use the published name in `package.json` by replacing `<my-publisher>` with the name you registered in the marketplace.

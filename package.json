@@ -1,12 +1,12 @@
 {
-    "name": "<pytool-module>",
-    "displayName": "<pytool-display-name>",
-    "description": "Linting support for python files using `<pytool-module>`.",
+    "name": "tantacule",
+    "displayName": "Tantacule",
+    "description": "Linting support for python files using `tantacule`.",
     "version": "2022.0.0-dev",
     "preview": true,
     "serverInfo": {
-        "name": "<pytool-display-name>",
-        "module": "<pytool-module>"
+        "name": "Tantacule",
+        "module": "tantacule"
     },
     "publisher": "<my-publisher>",
     "license": "MIT",
@@ -24,7 +24,7 @@
     },
     "keywords": [
         "python",
-        "<pytool-module>"
+        "tantacule"
     ],
     "engines": {
         "vscode": "^1.78.0"
@@ -40,12 +40,12 @@
     "capabilities": {
         "virtualWorkspaces": {
             "supported": false,
-            "description": "Virtual Workspaces are not supported with <pytool-display-name>."
+            "description": "Virtual Workspaces are not supported with Tantacule."
         }
     },
     "activationEvents": [
-        "onLanguage:python",
-        "workspaceContains:*.py"
+        "onLanguage:tantacule",
+        "workspaceContains:*.tac"
     ],
     "main": "./dist/extension.js",
     "scripts": {
@@ -59,12 +59,26 @@
         "lint": "eslint src --ext ts",
         "format-check": "prettier --check 'src/**/*.ts' 'build/**/*.yml' '.github/**/*.yml'",
         "test": "node ./out/test/runTest.js",
-        "vsce-package": "vsce package -o <pytool-module>.vsix"
+        "vsce-package": "vsce package -o tantacule.vsix"
     },
     "contributes": {
+        "languages": [{
+            "id": "tantacule",
+            "aliases": ["Tantacule", "tantacule"],
+            "extensions": [".tac"],
+            "icon": {
+                "light": "./icons/tantacule-light.png",
+                "dark": "./icons/tantacule-dark.png"
+            }
+        }],
+        "grammars": [{
+            "language": "tantacule",
+            "scopeName": "source.tantacule",
+            "path": "./syntaxes/tantacule.json"
+        }],
         "configuration": {
             "properties": {
-                "<pytool-module>.args": {
+                "tantacule.args": {
                     "default": [],
                     "description": "Arguments passed in. Each argument is a separate item in the array.",
                     "items": {
@@ -73,30 +87,30 @@
                     "scope": "resource",
                     "type": "array"
                 },
-                "<pytool-module>.path": {
+                "tantacule.path": {
                     "default": [],
-                    "description": "When set to a path to <pytool-module> binary, extension will use that. NOTE: Using this option may slowdown server response time.",
+                    "description": "When set to a path to tantacule binary, extension will use that. NOTE: Using this option may slowdown server response time.",
                     "scope": "resource",
                     "items": {
                         "type": "string"
                     },
                     "type": "array"
                 },
-                "<pytool-module>.importStrategy": {
+                "tantacule.importStrategy": {
                     "default": "useBundled",
-                    "description": "Defines where `<pytool-module>` is imported from. This setting may be ignored if `<pytool-module>.path` is set.",
+                    "description": "Defines where `tantacule` is imported from. This setting may be ignored if `tantacule.path` is set.",
                     "enum": [
                         "useBundled",
                         "fromEnvironment"
                     ],
                     "enumDescriptions": [
-                        "Always use the bundled version of `<pytool-module>`.",
-                        "Use `<pytool-module>` from environment, fallback to bundled version only if `<pytool-module>` not available in the environment."
+                        "Always use the bundled version of `tantacule`.",
+                        "Use `tantacule` from environment, fallback to bundled version only if `tantacule` not available in the environment."
                     ],
                     "scope": "window",
                     "type": "string"
                 },
-                "<pytool-module>.interpreter": {
+                "tantacule.interpreter": {
                     "default": [],
                     "description": "When set to a path to python executable, extension will use that to launch the server and any subprocess.",
                     "scope": "resource",
@@ -105,7 +119,7 @@
                     },
                     "type": "array"
                 },
-                "<pytool-module>.showNotifications": {
+                "tantacule.showNotifications": {
                     "default": "off",
                     "description": "Controls when notifications are shown by this extension.",
                     "enum": [
@@ -128,8 +142,8 @@
         "commands": [
             {
                 "title": "Restart Server",
-                "category": "<pytool-display-name>",
-                "command": "<pytool-module>.restart"
+                "category": "Tantacule",
+                "command": "tantacule.restart"
             }
         ]
     },

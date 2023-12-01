@@ -91,7 +91,7 @@ TOOL_ARGS = []  # default arguments always passed to your tool.
 @LSP_SERVER.feature(lsp.TEXT_DOCUMENT_DID_OPEN)
 def did_open(params: lsp.DidOpenTextDocumentParams) -> None:
     """LSP handler for textDocument/didOpen request."""
-    document = LSP_SERVER.workspace.get_document(params.text_document.uri)
+    document = LSP_SERVER.workspace.get_text_document(params.text_document.uri)
     diagnostics: list[lsp.Diagnostic] = _linting_helper(document)
     LSP_SERVER.publish_diagnostics(document.uri, diagnostics)
 
@@ -99,6 +99,13 @@ def did_open(params: lsp.DidOpenTextDocumentParams) -> None:
 @LSP_SERVER.feature(lsp.TEXT_DOCUMENT_DID_SAVE)
 def did_save(params: lsp.DidSaveTextDocumentParams) -> None:
     """LSP handler for textDocument/didSave request."""
+    document = LSP_SERVER.workspace.get_document(params.text_document.uri)
+    diagnostics: list[lsp.Diagnostic] = _linting_helper(document)
+    LSP_SERVER.publish_diagnostics(document.uri, diagnostics)
+
+@LSP_SERVER.feature(lsp.TEXT_DOCUMENT_DID_CHANGE)
+def did_change(params: lsp.DidSaveTextDocumentParams) -> None:
+    """LSP handler for textDocument/didChange request."""
     document = LSP_SERVER.workspace.get_document(params.text_document.uri)
     diagnostics: list[lsp.Diagnostic] = _linting_helper(document)
     LSP_SERVER.publish_diagnostics(document.uri, diagnostics)
@@ -117,8 +124,21 @@ def _linting_helper(document: workspace.Document) -> list[lsp.Diagnostic]:
     # If you want to support linting on change then your tool will need to
     # support linting over stdin to be effective. Read, and update
     # _run_tool_on_document and _run_tool functions as needed for your project.
-    result = _run_tool_on_document(document)
-    return _parse_output_using_regex(result.stdout) if result.stdout else []
+    #result = _run_tool_on_document(document)
+    result = [
+        lsp.Diagnostic(
+                range=lsp.Range(
+                    start=lsp.Position(1,1),
+                    end=lsp.Position(1,8),
+                ),
+                message="Test message from LSP",
+                severity=lsp.DiagnosticSeverity.Warning,
+                code="E42",
+                source="jb",
+            )
+    ]
+    #return _parse_output_using_regex(result)
+    return result
 
 
 # TODO: If your linter outputs in a known format like JSON, then parse
@@ -391,105 +411,10 @@ def _run_tool_on_document(
 
     # deep copy here to prevent accidentally updating global settings.
     settings = copy.deepcopy(_get_settings_by_document(document))
+    
 
-    code_workspace = settings["workspaceFS"]
-    cwd = settings["cwd"]
-
-    use_path = False
-    use_rpc = False
-    if settings["path"]:
-        # 'path' setting takes priority over everything.
-        use_path = True
-        argv = settings["path"]
-    elif settings["interpreter"] and not utils.is_current_interpreter(
-        settings["interpreter"][0]
-    ):
-        # If there is a different interpreter set use JSON-RPC to the subprocess
-        # running under that interpreter.
-        argv = [TOOL_MODULE]
-        use_rpc = True
-    else:
-        # if the interpreter is same as the interpreter running this
-        # process then run as module.
-        argv = [TOOL_MODULE]
-
-    argv += TOOL_ARGS + settings["args"] + extra_args
-
-    if use_stdin:
-        # TODO: update these to pass the appropriate arguments to provide document contents
-        # to tool via stdin.
-        # For example, for pylint args for stdin looks like this:
-        #     pylint --from-stdin <path>
-        # Here `--from-stdin` path is used by pylint to make decisions on the file contents
-        # that are being processed. Like, applying exclusion rules.
-        # It should look like this when you pass it:
-        #     argv += ["--from-stdin", document.path]
-        # Read up on how your tool handles contents via stdin. If stdin is not supported use
-        # set use_stdin to False, or provide path, what ever is appropriate for your tool.
-        argv += []
-    else:
-        argv += [document.path]
-
-    if use_path:
-        # This mode is used when running executables.
-        log_to_output(" ".join(argv))
-        log_to_output(f"CWD Server: {cwd}")
-        result = utils.run_path(
-            argv=argv,
-            use_stdin=use_stdin,
-            cwd=cwd,
-            source=document.source.replace("\r\n", "\n"),
-        )
-        if result.stderr:
-            log_to_output(result.stderr)
-    elif use_rpc:
-        # This mode is used if the interpreter running this server is different from
-        # the interpreter used for running this server.
-        log_to_output(" ".join(settings["interpreter"] + ["-m"] + argv))
-        log_to_output(f"CWD Linter: {cwd}")
-
-        result = jsonrpc.run_over_json_rpc(
-            workspace=code_workspace,
-            interpreter=settings["interpreter"],
-            module=TOOL_MODULE,
-            argv=argv,
-            use_stdin=use_stdin,
-            cwd=cwd,
-            source=document.source,
-        )
-        if result.exception:
-            log_error(result.exception)
-            result = utils.RunResult(result.stdout, result.stderr)
-        elif result.stderr:
-            log_to_output(result.stderr)
-    else:
-        # In this mode the tool is run as a module in the same process as the language server.
-        log_to_output(" ".join([sys.executable, "-m"] + argv))
-        log_to_output(f"CWD Linter: {cwd}")
-        # This is needed to preserve sys.path, in cases where the tool modifies
-        # sys.path and that might not work for this scenario next time around.
-        with utils.substitute_attr(sys, "path", sys.path[:]):
-            try:
-                # TODO: `utils.run_module` is equivalent to running `python -m <pytool-module>`.
-                # If your tool supports a programmatic API then replace the function below
-                # with code for your tool. You can also use `utils.run_api` helper, which
-                # handles changing working directories, managing io streams, etc.
-                # Also update `_run_tool` function and `utils.run_module` in `lsp_runner.py`.
-                result = utils.run_module(
-                    module=TOOL_MODULE,
-                    argv=argv,
-                    use_stdin=use_stdin,
-                    cwd=cwd,
-                    source=document.source,
-                )
-            except Exception:
-                log_error(traceback.format_exc(chain=True))
-                raise
-        if result.stderr:
-            log_to_output(result.stderr)
-
-    log_to_output(f"{document.uri} :\r\n{result.stdout}")
-    return result
+    log_to_output(f"{document.uri} :\r\n{None}")
+    return None
 
 
 def _run_tool(extra_args: Sequence[str]) -> utils.RunResult:

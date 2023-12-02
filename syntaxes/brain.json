@@ -189,7 +189,7 @@
 			"name": "support.brainonstant.mac-classic.brain"
 		},
 		"anon_pattern_12": {
-			"match": "(?x) \\b\n(AbsoluteTime|Boolean|Byte|ByteCount|ByteOffset|BytePtr|CompTimeValue|ConstLogicalAddress|ConstStrFileNameParam\n|ConstStringPtr|Duration|Fixed|FixedPtr|Float32|Float32Point|Float64|Float80|Float96|FourCharCode|Fract|FractPtr\n|Handle|ItemCount|LogicalAddress|OptionBits|OSErr|OSStatus|OSType|OSTypePtr|PhysicalAddress|ProcessSerialNumber\n|ProcessSerialNumberPtr|ProcHandle|Ptr|ResType|ResTypePtr|ShortFixed|ShortFixedPtr|SignedByte|SInt16|SInt32|SInt64\n|SInt8|Size|StrFileName|StringHandle|StringPtr|TimeBase|TimeRecord|TimeScale|TimeValue|TimeValue64|UInt16|UInt32\n|UInt64|UInt8|UniChar|UniCharCount|UniCharCountPtr|UniCharPtr|UnicodeScalarValue|UniversalProcHandle|UniversalProcPtr\n|UnsignedFixed|UnsignedFixedPtr|UnsignedWide|UTF16Char|UTF32Char|UTF8Char)\n\\b",
+			"match": "(?x) \\b\n(Here|here|Ahead|ahead|LeftAhead|leftahead|RightAhead|rightahead|Above|above|Below|below|friend|enemy|grabbed|friendwithfood|enemywithfood|food|rock|empty|underground|surface|holeabove|holebelow|marker|enemymarker|home|enemyhome|Friend|Enemy|Grabbed|FriendWithFood|EnemyWithFood|Food|Rock|Empty|Underground|Surface|HoleAbove|HoleBelow|Marker|EnemyMarker|Home|EnemyHome|AbsoluteTime|Boolean|Byte|ByteCount|ByteOffset|BytePtr|CompTimeValue|ConstLogicalAddress|ConstStrFileNameParam\n|ConstStringPtr|Duration|Fixed|FixedPtr|Float32|Float32Point|Float64|Float80|Float96|FourCharCode|Fract|FractPtr\n|Handle|ItemCount|LogicalAddress|OptionBits|OSErr|OSStatus|OSType|OSTypePtr|PhysicalAddress|ProcessSerialNumber\n|ProcessSerialNumberPtr|ProcHandle|Ptr|ResType|ResTypePtr|ShortFixed|ShortFixedPtr|SignedByte|SInt16|SInt32|SInt64\n|SInt8|Size|StrFileName|StringHandle|StringPtr|TimeBase|TimeRecord|TimeScale|TimeValue|TimeValue64|UInt16|UInt32\n|UInt64|UInt8|UniChar|UniCharCount|UniCharCountPtr|UniCharPtr|UnicodeScalarValue|UniversalProcHandle|UniversalProcPtr\n|UnsignedFixed|UnsignedFixedPtr|UnsignedWide|UTF16Char|UTF32Char|UTF8Char)\n\\b",
 			"name": "support.type.mac-classic.brain"
 		},
 		"anon_pattern_13": {
@@ -209,7 +209,7 @@
 			"name": "keyword.other.typedef.brain"
 		},
 		"anon_pattern_3": {
-			"match": "\\b(const|extern|register|restrict|static|volatile|inline)\\b",
+			"match": "\\b(Sense|sense|Mark|mark|Unmark|unmark|Pickup|pickup|Drop|drop|TurnLeft|turnleft|TurnRight|turnright|Move|move|MoveUp|moveup|MoveDown|movedown|Dig|dig|Fill|fill|DigUp|digup|DigDown|digdown|FillUp|fillup|FillDown|filldown|Grab|grab|Attack|attack|Roll|roll|Goto|goto|const|extern|register|restrict|static|volatile|inline)\\b",
 			"name": "storage.modifier.brain"
 		},
 		"anon_pattern_4": {

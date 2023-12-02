@@ -209,7 +209,7 @@
 			"name": "keyword.other.typedef.c"
 		},
 		"anon_pattern_3": {
-			"match": "\\b(tantacule|looping|const|extern|register|restrict|static|volatile|inline)\\b",
+			"match": "\\b(tantacule|def|looping|const|extern|register|restrict|static|volatile|inline)\\b",
 			"name": "storage.modifier.c"
 		},
 		"anon_pattern_4": {

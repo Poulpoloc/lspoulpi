@@ -49,45 +49,8 @@ RUNNER = pathlib.Path(__file__).parent / "lsp_runner.py"
 MAX_WORKERS = 5
 # TODO: Update the language server name and version.
 LSP_SERVER = server.LanguageServer(
-    name="lspoulpi", version="<server version>", max_workers=MAX_WORKERS
+    name="lspoulpi", version="1.0", max_workers=MAX_WORKERS
 )
-
-
-# **********************************************************
-# Tool specific code goes below this.
-# **********************************************************
-
-# Reference:
-#  LS Protocol:
-#  https://microsoft.github.io/language-server-protocol/specifications/specification-3-16/
-#
-#  Sample implementations:
-#  Pylint: https://github.com/microsoft/vscode-pylint/blob/main/bundled/tool
-#  Black: https://github.com/microsoft/vscode-black-formatter/blob/main/bundled/tool
-#  isort: https://github.com/microsoft/vscode-isort/blob/main/bundled/tool
-
-# TODO: Update TOOL_MODULE with the module name for your tool.
-# e.g, TOOL_MODULE = "pylint"
-TOOL_MODULE = "<pytool-module>"
-
-# TODO: Update TOOL_DISPLAY with a display name for your tool.
-# e.g, TOOL_DISPLAY = "Pylint"
-TOOL_DISPLAY = "<pytool-display-name>"
-
-# TODO: Update TOOL_ARGS with default argument you have to pass to your tool in
-# all scenarios.
-TOOL_ARGS = []  # default arguments always passed to your tool.
-
-
-# TODO: If your tool is a linter then update this section.
-# Delete "Linting features" section if your tool is NOT a linter.
-# **********************************************************
-# Linting features start here
-# **********************************************************
-
-#  See `pylint` implementation for a full featured linter extension:
-#  Pylint: https://github.com/microsoft/vscode-pylint/blob/main/bundled/tool
-
 
 @LSP_SERVER.feature(lsp.TEXT_DOCUMENT_DID_OPEN)
 def did_open(params: lsp.DidOpenTextDocumentParams) -> None:
@@ -121,7 +84,7 @@ def did_close(params: lsp.DidCloseTextDocumentParams) -> None:
 
 @LSP_SERVER.feature(
     lsp.TEXT_DOCUMENT_COMPLETION,
-    lsp.CompletionOptions(trigger_characters=["?"], all_commit_characters=[":"]),
+    lsp.CompletionOptions(trigger_characters=["?"]),
 )
 def completions(params: Optional[lsp.CompletionParams] = None) -> lsp.CompletionList:
     """Returns completion items."""
@@ -175,21 +138,21 @@ def code_actions(params: lsp.CodeActionParams):
             items.append(action)
 
     return items
+"""
 
 @LSP_SERVER.feature(lsp.TEXT_DOCUMENT_HOVER)
 def hover(params: lsp.TextDocumentPositionParams) -> Optional[lsp.Hover]:
     document = LSP_SERVER.workspace.get_document(params.text_document.uri)
     if document:
-        start_pos = params.position
-        end_pos = params.position
-        end_pos.character += 1
-        return lsp.Hover(
-            contents=lsp.MarkupContent(
-                lsp.MarkupKind.Markdown, 
-                "test *test*"), 
-            range=lsp.Range(start_pos,end_pos))
+        md_text = octopus.get_info(document._source, params.position)
+        if md_text:
+            return lsp.Hover(
+                contents=lsp.MarkupContent(
+                    lsp.MarkupKind.Markdown, 
+                    md_text), 
+                range=lsp.Range(params.position,params.position))
     return None
-"""
+
 def _from_occ_range_to_vs_range(document: workspace.Document, range: tuple[int,int]) -> lsp.Range:
     text : str = document._source # type: ignore
     ls = text[:range[0]].count("\n")
@@ -211,7 +174,9 @@ def _linting_helper(document: workspace.Document) -> list[lsp.Diagnostic]:
     #result = _run_tool_on_document(document)
     reports = octopus.get_report(document.path)
     warnings = reports.warnings # type: ignore
-    result = [
+    errors = reports.errors # type: ignore
+    result = []
+    result += [
         lsp.Diagnostic(
                 range=_from_occ_range_to_vs_range(document, warning.location_span),
                 message=warning.message,
@@ -221,62 +186,20 @@ def _linting_helper(document: workspace.Document) -> list[lsp.Diagnostic]:
             )
         for warning in warnings
     ]
+    result += [
+        lsp.Diagnostic(
+                range=_from_occ_range_to_vs_range(document, error.location_span),
+                message=error.message,
+                severity=lsp.DiagnosticSeverity.Error,
+                code="E42",
+                source="lspoulpi",
+            )
+        for error in errors
+    ]
     #return _parse_output_using_regex(result)
     return result
 
 
-# TODO: If your linter outputs in a known format like JSON, then parse
-# accordingly. But incase you need to parse the output using RegEx here
-# is a helper you can work with.
-# flake8 example:
-# If you use following format argument with flake8 you can use the regex below to parse it.
-# TOOL_ARGS += ["--format='%(row)d,%(col)d,%(code).1s,%(code)s:%(text)s'"]
-# DIAGNOSTIC_RE =
-#    r"(?P<line>\d+),(?P<column>-?\d+),(?P<type>\w+),(?P<code>\w+\d+):(?P<message>[^\r\n]*)"
-DIAGNOSTIC_RE = re.compile(r"")
-
-
-def _parse_output_using_regex(content: str) -> list[lsp.Diagnostic]:
-    lines: list[str] = content.splitlines()
-    diagnostics: list[lsp.Diagnostic] = []
-
-    # TODO: Determine if your linter reports line numbers starting at 1 (True) or 0 (False).
-    line_at_1 = True
-    # TODO: Determine if your linter reports column numbers starting at 1 (True) or 0 (False).
-    column_at_1 = True
-
-    line_offset = 1 if line_at_1 else 0
-    col_offset = 1 if column_at_1 else 0
-    for line in lines:
-        if line.startswith("'") and line.endswith("'"):
-            line = line[1:-1]
-        match = DIAGNOSTIC_RE.match(line)
-        if match:
-            data = match.groupdict()
-            position = lsp.Position(
-                line=max([int(data["line"]) - line_offset, 0]),
-                character=int(data["column"]) - col_offset,
-            )
-            diagnostic = lsp.Diagnostic(
-                range=lsp.Range(
-                    start=position,
-                    end=position,
-                ),
-                message=data.get("message"),
-                severity=_get_severity(data["code"], data["type"]),
-                code=data["code"],
-                source=TOOL_MODULE,
-            )
-            diagnostics.append(diagnostic)
-
-    return diagnostics
-
-
-# TODO: if you want to handle setting specific severity for your linter
-# in a user configurable way, then look at look at how it is implemented
-# for `pylint` extension from our team.
-# Pylint: https://github.com/microsoft/vscode-pylint
-# Follow the flow of severity from the settings in package.json to the server.
 def _get_severity(*_codes: list[str]) -> lsp.DiagnosticSeverity:
     # TODO: All reported issues from linter are treated as warning.
     # change it as appropriate for your linter.
@@ -284,14 +207,14 @@ def _get_severity(*_codes: list[str]) -> lsp.DiagnosticSeverity:
 
 
 
-def _get_line_endings(lines: list[str]) -> str:
+def _get_line_endings(lines: list[str]):
     """Returns line endings used in the text."""
     try:
         if lines[0][-2:] == "\r\n":
             return "\r\n"
         return "\n"
     except Exception:  # pylint: disable=broad-except
-        return None
+        return None #type: ignore
 
 
 def _match_line_endings(document: workspace.Document, text: str) -> str:

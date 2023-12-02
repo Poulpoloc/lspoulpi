@@ -11,7 +11,8 @@ import re
 import sys
 import sysconfig
 import traceback
-from typing import Any, Optional, Sequence
+import octopus
+from typing import Any, List, Optional, Sequence
 
 
 # **********************************************************
@@ -48,7 +49,7 @@ RUNNER = pathlib.Path(__file__).parent / "lsp_runner.py"
 MAX_WORKERS = 5
 # TODO: Update the language server name and version.
 LSP_SERVER = server.LanguageServer(
-    name="<pytool-display-name>", version="<server version>", max_workers=MAX_WORKERS
+    name="lspoulpi", version="<server version>", max_workers=MAX_WORKERS
 )
 
 
@@ -118,6 +119,89 @@ def did_close(params: lsp.DidCloseTextDocumentParams) -> None:
     # Publishing empty diagnostics to clear the entries for this file.
     LSP_SERVER.publish_diagnostics(document.uri, [])
 
+@LSP_SERVER.feature(
+    lsp.TEXT_DOCUMENT_COMPLETION,
+    lsp.CompletionOptions(trigger_characters=["?"], all_commit_characters=[":"]),
+)
+def completions(params: Optional[lsp.CompletionParams] = None) -> lsp.CompletionList:
+    """Returns completion items."""
+    return lsp.CompletionList(
+        is_incomplete=True,
+        items=[
+            lsp.CompletionItem(label='here'),
+            lsp.CompletionItem(label="ahead"),
+            lsp.CompletionItem(label="leftahead"),
+            lsp.CompletionItem(label="rightahead"),
+            lsp.CompletionItem(label="above"),
+            lsp.CompletionItem(label="below"),
+        ],
+    )
+
+"""
+ADDITION = re.compile(r"^\s*(\d+)\s*\+\s*(\d+)\s*=(?=\s*$)")
+
+@LSP_SERVER.feature(
+    lsp.TEXT_DOCUMENT_CODE_ACTION,
+    lsp.CodeActionOptions(code_action_kinds=[lsp.CodeActionKind.QuickFix]),
+)
+def code_actions(params: lsp.CodeActionParams):
+    items = []
+    document_uri = params.text_document.uri
+    document = LSP_SERVER.workspace.get_document(document_uri)
+
+    start_line = params.range.start.line
+    end_line = params.range.end.line
+
+    lines = document.lines[start_line : end_line + 1]
+    for idx, line in enumerate(lines):
+        match = ADDITION.match(line)
+        if match is not None:
+            range_ = lsp.Range(
+                start=lsp.Position(line=start_line + idx, character=0),
+                end=lsp.Position(line=start_line + idx, character=len(line) - 1),
+            )
+
+            left = int(match.group(1))
+            right = int(match.group(2))
+            answer = left + right
+
+            text_edit = lsp.TextEdit(range=range_, new_text=f"{line.strip()} {answer}!")
+
+            action = lsp.CodeAction(
+                title=f"Evaluate '{match.group(0)}'",
+                kind=lsp.CodeActionKind.QuickFix,
+                edit=lsp.WorkspaceEdit(changes={document_uri: [text_edit]}),
+            )
+            items.append(action)
+
+    return items
+
+@LSP_SERVER.feature(lsp.TEXT_DOCUMENT_HOVER)
+def hover(params: lsp.TextDocumentPositionParams) -> Optional[lsp.Hover]:
+    document = LSP_SERVER.workspace.get_document(params.text_document.uri)
+    if document:
+        start_pos = params.position
+        end_pos = params.position
+        end_pos.character += 1
+        return lsp.Hover(
+            contents=lsp.MarkupContent(
+                lsp.MarkupKind.Markdown, 
+                "test *test*"), 
+            range=lsp.Range(start_pos,end_pos))
+    return None
+"""
+def _from_occ_range_to_vs_range(document: workspace.Document, range: tuple[int,int]) -> lsp.Range:
+    text : str = document._source # type: ignore
+    ls = text[:range[0]].count("\n")
+    le = text[:range[1]].count("\n")
+    cs = len(text[:range[0]].split("\n"))
+    ce = len(text[:range[1]].split("\n"))
+    print(ls,cs,le,ce)
+
+    return lsp.Range(
+        start=lsp.Position(ls,cs),
+        end=lsp.Position(le,ce),
+    )
 
 def _linting_helper(document: workspace.Document) -> list[lsp.Diagnostic]:
     # TODO: Determine if your tool supports passing file content via stdin.
@@ -125,17 +209,17 @@ def _linting_helper(document: workspace.Document) -> list[lsp.Diagnostic]:
     # support linting over stdin to be effective. Read, and update
     # _run_tool_on_document and _run_tool functions as needed for your project.
     #result = _run_tool_on_document(document)
+    reports = octopus.get_report(document.path)
+    warnings = reports.warnings # type: ignore
     result = [
         lsp.Diagnostic(
-                range=lsp.Range(
-                    start=lsp.Position(1,1),
-                    end=lsp.Position(1,8),
-                ),
-                message="Test message from LSP",
+                range=_from_occ_range_to_vs_range(document, warning.location_span),
+                message=warning.message,
                 severity=lsp.DiagnosticSeverity.Warning,
                 code="E42",
-                source="jb",
+                source="lspoulpi",
             )
+        for warning in warnings
     ]
     #return _parse_output_using_regex(result)
     return result
@@ -199,56 +283,6 @@ def _get_severity(*_codes: list[str]) -> lsp.DiagnosticSeverity:
     return lsp.DiagnosticSeverity.Warning
 
 
-# **********************************************************
-# Linting features end here
-# **********************************************************
-
-# TODO: If your tool is a formatter then update this section.
-# Delete "Formatting features" section if your tool is NOT a
-# formatter.
-# **********************************************************
-# Formatting features start here
-# **********************************************************
-#  Sample implementations:
-#  Black: https://github.com/microsoft/vscode-black-formatter/blob/main/bundled/tool
-
-
-@LSP_SERVER.feature(lsp.TEXT_DOCUMENT_FORMATTING)
-def formatting(params: lsp.DocumentFormattingParams) -> list[lsp.TextEdit] | None:
-    """LSP handler for textDocument/formatting request."""
-    # If your tool is a formatter you can use this handler to provide
-    # formatting support on save. You have to return an array of lsp.TextEdit
-    # objects, to provide your formatted results.
-
-    document = LSP_SERVER.workspace.get_document(params.text_document.uri)
-    edits = _formatting_helper(document)
-    if edits:
-        return edits
-
-    # NOTE: If you provide [] array, VS Code will clear the file of all contents.
-    # To indicate no changes to file return None.
-    return None
-
-
-def _formatting_helper(document: workspace.Document) -> list[lsp.TextEdit] | None:
-    # TODO: For formatting on save support the formatter you use must support
-    # formatting via stdin.
-    # Read, and update_run_tool_on_document and _run_tool functions as needed
-    # for your formatter.
-    result = _run_tool_on_document(document, use_stdin=True)
-    if result.stdout:
-        new_source = _match_line_endings(document, result.stdout)
-        return [
-            lsp.TextEdit(
-                range=lsp.Range(
-                    start=lsp.Position(line=0, character=0),
-                    end=lsp.Position(line=len(document.lines), character=0),
-                ),
-                new_text=new_source,
-            )
-        ]
-    return None
-
 
 def _get_line_endings(lines: list[str]) -> str:
     """Returns line endings used in the text."""
@@ -269,9 +303,6 @@ def _match_line_endings(document: workspace.Document, text: str) -> str:
     return text.replace(actual, expected)
 
 
-# **********************************************************
-# Formatting features ends here
-# **********************************************************
 
 
 # **********************************************************
@@ -382,118 +413,6 @@ def _get_settings_by_document(document: workspace.Document | None):
         }
 
     return WORKSPACE_SETTINGS[str(key)]
-
-
-# *****************************************************
-# Internal execution APIs.
-# *****************************************************
-def _run_tool_on_document(
-    document: workspace.Document,
-    use_stdin: bool = False,
-    extra_args: Optional[Sequence[str]] = None,
-) -> utils.RunResult | None:
-    """Runs tool on the given document.
-
-    if use_stdin is true then contents of the document is passed to the
-    tool via stdin.
-    """
-    if extra_args is None:
-        extra_args = []
-    if str(document.uri).startswith("vscode-notebook-cell"):
-        # TODO: Decide on if you want to skip notebook cells.
-        # Skip notebook cells
-        return None
-
-    if utils.is_stdlib_file(document.path):
-        # TODO: Decide on if you want to skip standard library files.
-        # Skip standard library python files.
-        return None
-
-    # deep copy here to prevent accidentally updating global settings.
-    settings = copy.deepcopy(_get_settings_by_document(document))
-    
-
-    log_to_output(f"{document.uri} :\r\n{None}")
-    return None
-
-
-def _run_tool(extra_args: Sequence[str]) -> utils.RunResult:
-    """Runs tool."""
-    # deep copy here to prevent accidentally updating global settings.
-    settings = copy.deepcopy(_get_settings_by_document(None))
-
-    code_workspace = settings["workspaceFS"]
-    cwd = settings["workspaceFS"]
-
-    use_path = False
-    use_rpc = False
-    if len(settings["path"]) > 0:
-        # 'path' setting takes priority over everything.
-        use_path = True
-        argv = settings["path"]
-    elif len(settings["interpreter"]) > 0 and not utils.is_current_interpreter(
-        settings["interpreter"][0]
-    ):
-        # If there is a different interpreter set use JSON-RPC to the subprocess
-        # running under that interpreter.
-        argv = [TOOL_MODULE]
-        use_rpc = True
-    else:
-        # if the interpreter is same as the interpreter running this
-        # process then run as module.
-        argv = [TOOL_MODULE]
-
-    argv += extra_args
-
-    if use_path:
-        # This mode is used when running executables.
-        log_to_output(" ".join(argv))
-        log_to_output(f"CWD Server: {cwd}")
-        result = utils.run_path(argv=argv, use_stdin=True, cwd=cwd)
-        if result.stderr:
-            log_to_output(result.stderr)
-    elif use_rpc:
-        # This mode is used if the interpreter running this server is different from
-        # the interpreter used for running this server.
-        log_to_output(" ".join(settings["interpreter"] + ["-m"] + argv))
-        log_to_output(f"CWD Linter: {cwd}")
-        result = jsonrpc.run_over_json_rpc(
-            workspace=code_workspace,
-            interpreter=settings["interpreter"],
-            module=TOOL_MODULE,
-            argv=argv,
-            use_stdin=True,
-            cwd=cwd,
-        )
-        if result.exception:
-            log_error(result.exception)
-            result = utils.RunResult(result.stdout, result.stderr)
-        elif result.stderr:
-            log_to_output(result.stderr)
-    else:
-        # In this mode the tool is run as a module in the same process as the language server.
-        log_to_output(" ".join([sys.executable, "-m"] + argv))
-        log_to_output(f"CWD Linter: {cwd}")
-        # This is needed to preserve sys.path, in cases where the tool modifies
-        # sys.path and that might not work for this scenario next time around.
-        with utils.substitute_attr(sys, "path", sys.path[:]):
-            try:
-                # TODO: `utils.run_module` is equivalent to running `python -m <pytool-module>`.
-                # If your tool supports a programmatic API then replace the function below
-                # with code for your tool. You can also use `utils.run_api` helper, which
-                # handles changing working directories, managing io streams, etc.
-                # Also update `_run_tool_on_document` function and `utils.run_module` in `lsp_runner.py`.
-                result = utils.run_module(
-                    module=TOOL_MODULE, argv=argv, use_stdin=True, cwd=cwd
-                )
-            except Exception:
-                log_error(traceback.format_exc(chain=True))
-                raise
-        if result.stderr:
-            log_to_output(result.stderr)
-
-    log_to_output(f"\r\n{result.stdout}\r\n")
-    return result
 
 
 # *****************************************************

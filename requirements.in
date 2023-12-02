@@ -11,6 +11,7 @@
 # Required packages
 pygls
 packaging
-git+https://github.com/Poulpoloc/octopus 
+git+https://github.com/Poulpoloc/octopus.git
+
 
 # TODO: Add your tool here

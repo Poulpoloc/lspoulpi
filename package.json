@@ -1,22 +1,23 @@
 {
     "name": "tantacule",
     "displayName": "Tantacule",
-    "description": "Linting support for python files using `tantacule`.",
-    "version": "2022.0.0-dev",
-    "preview": true,
+    "description": "Language support of Tantacule, a language created by Poulpi to control ants",
+    "version": "2023.0.1",
+    "preview": false,
     "serverInfo": {
         "name": "Tantacule",
         "module": "tantacule"
     },
-    "publisher": "<my-publisher>",
+    "icon": "icons/poulpoloc.jpg",
+    "publisher": "poulpoloc",
     "license": "MIT",
-    "homepage": "https://github.com/<my-github>/<my-extension-project>",
+    "homepage": "https://github.com/Poulpoloc/lspoulpi",
     "repository": {
         "type": "git",
-        "url": "https://github.com/<my-github>/<my-extension-project>.git"
+        "url": "https://github.com/Poulpoloc/lspoulpi.git"
     },
     "bugs": {
-        "url": "https://github.com/<my-github>/<my-extension-project>/issues"
+        "url": "https://github.com/Poulpoloc/lspoulpi/issues"
     },
     "galleryBanner": {
         "color": "#1e415e",
@@ -31,8 +32,7 @@
     },
     "categories": [
         "Programming Languages",
-        "Linters",
-        "Formatters"
+        "Themes"
     ],
     "extensionDependencies": [
         "ms-python.python"
@@ -45,7 +45,8 @@
     },
     "activationEvents": [
         "onLanguage:tantacule",
-        "workspaceContains:*.tant"
+        "workspaceContains:*.tant",
+        "workspaceContains:*.brain"
     ],
     "main": "./dist/extension.js",
     "scripts": {
@@ -70,11 +71,25 @@
                 "light": "./icons/tantacule-light.png",
                 "dark": "./icons/tantacule-dark.png"
             }
+        },
+        {
+            "id": "brain",
+            "aliases": ["Brain", "brain"],
+            "extensions": [".brain"],
+            "icon": {
+                "light": "./icons/brain-light.png",
+                "dark": "./icons/brain-dark.png"
+            }
         }],
         "grammars": [{
             "language": "tantacule",
             "scopeName": "source.tantacule",
             "path": "./syntaxes/tantacule.json"
+        },
+        {
+            "language": "brain",
+            "scopeName": "source.brain",
+            "path": "./syntaxes/brain.json"
         }],
         "configuration": {
             "properties": {

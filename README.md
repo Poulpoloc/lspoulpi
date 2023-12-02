@@ -17,7 +17,7 @@
 1. **Optional** Install test dependencies `python -m pip install -r src/test/python_tests/requirements.txt`. You will have to install these to run tests from the Test Explorer.
 1. Install node packages using `npm install`.
 1. Go to https://marketplace.visualstudio.com/vscode and create a publisher account if you don't already have one.
-    1. Use the published name in `package.json` by replacing `<my-publisher>` with the name you registered in the marketplace.
+    1. Use the published name in `package.json` by replacing `poulpoloc` with the name you registered in the marketplace.
 
 ## Features of this Template
 
@@ -134,7 +134,6 @@ This can occurs if `bundled/libs` is empty. That is the folder where we put your
 
 Common one is [_pygls_][pygls] module not found.
 
-# TODO: The maintainer of this repo has not yet edited this file
 
 **Repo Owner** Make sure you update this. As a repository owner you will need to update this file with specific instructions for your extension.
 

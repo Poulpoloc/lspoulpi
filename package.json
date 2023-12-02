@@ -45,7 +45,7 @@
     },
     "activationEvents": [
         "onLanguage:tantacule",
-        "workspaceContains:*.tac"
+        "workspaceContains:*.tant"
     ],
     "main": "./dist/extension.js",
     "scripts": {
@@ -65,7 +65,7 @@
         "languages": [{
             "id": "tantacule",
             "aliases": ["Tantacule", "tantacule"],
-            "extensions": [".tac"],
+            "extensions": [".tant"],
             "icon": {
                 "light": "./icons/tantacule-light.png",
                 "dark": "./icons/tantacule-dark.png"

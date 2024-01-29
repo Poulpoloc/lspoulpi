@@ -9,14 +9,16 @@ attrs==23.1.0
     #   cattrs
     #   lsprotocol
 cattrs==23.2.3
-    # via lsprotocol
-lsprotocol==2023.0.0
+    # via
+    #   lsprotocol
+    #   pygls
+lsprotocol==2023.0.1
     # via pygls
 octopus @ git+https://github.com/Poulpoloc/octopus.git
-    # via -r ./requirements.in
+    # via -r requirements.in
 packaging==23.2
-    # via -r ./requirements.in
+    # via -r requirements.in
 ply==3.11
     # via octopus
-pygls==1.2.1
-    # via -r ./requirements.in
+pygls==1.3.0
+    # via -r requirements.in
